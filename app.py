@@ -2,6 +2,34 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
+# ─── 0. PAGE CONFIG ──────────────────────────────────────────────────────────
+st.set_page_config(
+    page_title="Medicare STAR Rating Simulator",
+    layout="wide"
+)
+
+# ─── HEADER: LOGO LEFT, TITLE CENTERED BELOW ────────────────────────────────
+logo_path = "logo.png"  # your 365×138 logo next to app.py
+
+# Row 1: Logo in left column
+col1, col2, col3 = st.columns([1, 6, 1])
+with col1:
+    st.image(logo_path, width=365)
+with col2:
+    st.empty()
+with col3:
+    st.empty()
+
+# Row 2: Title centered across the page
+_, title_col, _ = st.columns([1, 6, 1])
+with title_col:
+    st.markdown(
+        "<h1 style='text-align:center; margin-top:20px;'>"
+        "Medicare STAR Rating Simulator"
+        "</h1>",
+        unsafe_allow_html=True
+    )
+
 # === 1. KPI definitions ===
 categorized_kpis = {
     "Part D Measures": {
@@ -85,7 +113,6 @@ def generate_recommendations(kpis: dict) -> list[str]:
     return recs
 
 # === 6. Streamlit app ===
-st.set_page_config(page_title="Medicare STAR Rating Simulator", layout="wide")
 
 # Initialize session state
 if "kpis" not in st.session_state:
@@ -96,7 +123,6 @@ if st.button("🔄 Reset to Baseline"):
     st.session_state.kpis = baseline_kpis()
     st.experimental_rerun()
 
-st.title("Medicare STAR Rating Simulator")
 st.markdown(
     f"**Projected STAR Rating:** {calculate_star_score(st.session_state.kpis):.2f}"
 )
@@ -107,14 +133,13 @@ for domain, groups in categorized_kpis.items():
         for subgroup, items in groups.items():
             st.markdown(f"**{subgroup}**")
             for label in items.keys():
-                # *** Make sure `value` is a float, not a list ***
                 new_val = st.slider(
                     label=label,
                     min_value=-5.0,
                     max_value=10.0,
                     value=float(st.session_state.kpis[label]),
                     step=1.0,
-                    key=label  # unique key per KPI
+                    key=label
                 )
                 st.session_state.kpis[label] = new_val
 
