@@ -135,8 +135,8 @@ for domain, groups in categorized_kpis.items():
             for label in items.keys():
                 new_val = st.slider(
                     label=label,
-                    min_value=-5.0,
-                    max_value=10.0,
+                    min_value=1.0,
+                    max_value=5.0,
                     value=float(st.session_state.kpis[label]),
                     step=1.0,
                     key=label
