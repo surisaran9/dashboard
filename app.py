@@ -66,20 +66,20 @@ categorized_kpis = {
     }
 }
 
-# === 2. Baseline values logic ===
+# === 2. Baseline values logic (1–5 scale) ===
 def baseline_kpis():
     flat = {}
     for groups in categorized_kpis.values():
         for items in groups.values():
             for kpi in items.keys():
                 if "Complaints" in kpi or "Problems" in kpi:
-                    flat[kpi] = -2.0
+                    flat[kpi] = 1.0           # worst
                 elif "Rating" in kpi or "Adherence" in kpi:
-                    flat[kpi] = 1.5
+                    flat[kpi] = 3.0           # mid
                 elif "Accuracy" in kpi or "Timeliness" in kpi:
-                    flat[kpi] = 2.0
+                    flat[kpi] = 4.0           # good
                 else:
-                    flat[kpi] = 0.5
+                    flat[kpi] = 2.0           # below mid
     return flat
 
 # === 3. Recommendations map ===
@@ -91,19 +91,22 @@ kpi_recommendations = {
     "Getting Appointments and Care Quickly": "Expand provider network or offer telehealth to improve timely access."
 }
 
-# === 4. STAR score calculation ===
+# === 4. STAR score calculation (normalized to new range) ===
 BASE_SCORE = 3.2
 
 def calculate_star_score(kpis: dict) -> float:
     total = sum(kpis.values())
-    max_possible = len(kpis) * 10
-    ratio = max(0, min(1, total / max_possible))
+    n = len(kpis)
+    min_sum = n * 1.0
+    max_sum = n * 5.0
+    ratio = (total - min_sum) / (max_sum - min_sum)
+    ratio = max(0.0, min(1.0, ratio))
     return BASE_SCORE + ratio * (5 - BASE_SCORE)
 
 # === 5. Generate top-5 “AI” recommendations ===
 def generate_recommendations(kpis: dict) -> list[str]:
     low = sorted(
-        ((k, v) for k, v in kpis.items() if v < 2.0),
+        ((k, v) for k, v in kpis.items() if v < 3.0),
         key=lambda kv: kv[1]
     )[:5]
     recs = []
@@ -123,11 +126,12 @@ if st.button("🔄 Reset to Baseline"):
     st.session_state.kpis = baseline_kpis()
     st.experimental_rerun()
 
+# Display current STAR rating
 st.markdown(
     f"**Projected STAR Rating:** {calculate_star_score(st.session_state.kpis):.2f}"
 )
 
-# Sliders inside expanders
+# Sliders inside expanders (1–5)
 for domain, groups in categorized_kpis.items():
     with st.expander(domain):
         for subgroup, items in groups.items():
